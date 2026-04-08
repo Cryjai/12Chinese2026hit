@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>DSE文言衝刺·大熱分類Quiz｜出師表＋勸學＋始得西山＋登樓＋詞＋中熱</title>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+        body {
+            background: #f4f1e6;
+            font-family: 'Segoe UI', 'Noto Sans TC', '微軟正黑體', sans-serif;
+            margin: 0;
+            padding: 20px;
+            color: #2c2b28;
+        }
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+        .category-bar {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            justify-content: center;
+            margin-bottom: 20px;
+            background: #fff8ef;
+            padding: 12px;
+            border-radius: 48px;
+        }
+        .cat-btn {
+            background: #e8e0d0;
+            border: none;
+            padding: 6px 14px;
+            border-radius: 40px;
+            font-weight: 600;
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .cat-btn.active {
+            background: #b87c3c;
+            color: white;
+        }
+        .cat-btn.mix {
+            background: #2d5e2c;
+            color: white;
+        }
+        .quiz-header {
+            background: #2d5e2c;
+            color: white;
+            border-radius: 2rem;
+            padding: 1rem;
+            text-align: center;
+            margin-bottom: 1.5rem;
+        }
+        h1 {
+            margin: 0;
+            font-size: 1.6rem;
+        }
+        .stats {
+            display: flex;
+            justify-content: space-between;
+            background: #f9f7ef;
+            color: #2c3e2b;
+            padding: 0.5rem 1rem;
+            border-radius: 3rem;
+            margin-top: 0.6rem;
+            font-weight: bold;
+        }
+        .quiz-card {
+            background: #fffef7;
+            border-radius: 2rem;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+            padding: 1.5rem;
+        }
+        .sentence {
+            font-size: 1.3rem;
+            line-height: 1.5;
+            background: #fefaf0;
+            padding: 1rem;
+            border-radius: 1.2rem;
+            border-left: 6px solid #b87c3c;
+            margin-bottom: 1.2rem;
+        }
+        .highlight {
+            background-color: #ffecb3;
+            color: #b45f1b;
+            font-weight: 800;
+            padding: 0 4px;
+            border-radius: 8px;
+        }
+        input {
+            width: 100%;
+            padding: 12px;
+            font-size: 1rem;
+            border: 2px solid #e2d8c2;
+            border-radius: 2rem;
+            margin-top: 8px;
+        }
+        .feedback {
+            margin-top: 12px;
+            padding: 0.5rem 1rem;
+            border-radius: 2rem;
+        }
+        .correct-fb { background: #dff0e0; color: #2a5c2a; }
+        .wrong-fb { background: #ffe1de; color: #bc3900; }
+        .btn-group {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            gap: 10px;
+            margin-top: 1.5rem;
+        }
+        button {
+            background: #e6ddcd;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 2rem;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        button.primary { background: #b87c3c; color: white; }
+        button.next-btn { background: #2d5e2c; color: white; }
+        footer {
+            text-align: center;
+            margin-top: 2rem;
+            font-size: 0.7rem;
+            color: #9e957f;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="quiz-header">
+        <h1>📖 DSE文言·大熱衝刺</h1>
+        <div class="stats">
+            <span>✅ 答對: <span id="correctCount">0</span></span>
+            <span>📋 題數: <span id="totalCountSpan">0</span></span>
+            <span>🔢 第 <span id="currentIdxSpan">1</span> / <span id="totalIdxSpan">0</span></span>
+        </div>
+    </div>
+    <div class="category-bar" id="categoryBar"></div>
+    <div class="quiz-card">
+        <div class="sentence" id="sentenceText"></div>
+        <input type="text" id="answerInput" placeholder="輸入字詞解釋 ...">
+        <div id="feedback" class="feedback"></div>
+        <div class="btn-group">
+            <button id="checkBtn" class="primary">✓ 核對</button>
+            <button id="skipBtn">⤳ 答案</button>
+            <button id="nextBtn" class="next-btn">⟳ 下一題</button>
+        </div>
+    </div>
+    <footer>🔥 大熱：《出師表》《勸學》《始得西山》《登樓》+三首詞 ｜ 中熱：《論仁》《魚我所欲》《逍遙遊》 ｜ 其他：廉頗/師說 (上年出過，可略)</footer>
+</div>
+
+<script>
+// --------------------------------------------------------------
+// 題庫：完全依照DSE大熱+中熱，並收錄你PDF所有字詞(一個不漏)
+// 分類順序：大熱(出師表、勸學、西山、登樓+詞)、中熱(論語、魚我所欲、逍遙遊)、其他
+// --------------------------------------------------------------
+const allQuestions = [];
+
+// ================= 大熱 1. 出師表 =================
+const chushibiao = [
+    ["先帝創業未半而中道崩殂","崩殂","皇帝死亡"],["此誠危急存亡之秋也","秋","時候／關鍵時期"],
+    ["蓋追先帝之殊遇","殊遇","特別的恩遇"],["以光先帝遺德","光","發揚光大"],["恢弘志士之氣","恢弘","發揚／擴充"],
+    ["不宜妄自菲薄","妄自菲薄","隨便看輕自己"],["引喻失義","引喻失義","說話不恰當"],["陟罰臧否","陟罰臧否","賞罰善惡"],
+    ["宜付有司論其刑賞","有司","主管官員"],["以昭陛下平明之理","昭","彰顯"],["必能裨補闕漏","裨補","彌補"],
+    ["親賢臣，遠小人","親","親近"],["遠小人","遠","疏遠"],["此先漢所以興隆也","所以","…的原因"],
+    ["未嘗不嘆息痛恨於桓靈也","痛恨","痛心遺憾"],["苟全性命於亂世","苟全","苟且保全"],["不求聞達於諸侯","聞達","顯達有名望"],
+    ["三顧臣於草廬之中","顧","拜訪"],["由是感激","感激","感動奮發"],["遂許先帝以驅馳","驅馳","奔走效勞"],
+    ["後值傾覆","值","遇到"],["奉命於危難之間","奉命","接受命令"],["爾來二十有一年矣","爾來","從那時以來"],
+    ["故臨崩寄臣以大事也","寄","託付"],["夙夜憂嘆","夙夜","早晚"],["深入不毛","不毛","不長草木的地方"],
+    ["庶竭駑鈍","駑鈍","才能低下"],["攘除奸凶","攘除","剷除"],["則責攸之、禕、允等之慢","慢","怠慢"],
+    ["以彰其咎","彰","揭示"],["陛下亦宜自謀","宜","應該"],["諮諏善道","諮諏","詢問"],
+    ["察納雅言","雅言","正言"],["臨表涕零","涕零","流淚"]
+];
+chushibiao.forEach(item => allQuestions.push({ category:"大熱·出師表", sentence:item[0], boldWord:item[1], answer:item[2] }));
+
+// ================= 大熱 2. 勸學 (荀子·你PDF已有) =================
+const quanxue = [
+    ["學不可以已","已","停止"],["青取之於藍","於","從"],["而青於藍","於","比"],
+    ["木直中繩","中","符合"],["輮以為輪","以為","用…做成"],["雖有槁暴","槁暴","曬乾"],
+    ["金就礪則利","就","靠近"],["君子博學而日參省乎己","博學","廣泛學習"],["參省","檢查反省"],
+    ["知明而行無過矣","知","智慧"],["吾嘗終日而思矣","嘗","曾經"],["不如須臾之所學也","須臾","片刻"],
+    ["聲非加疾也而聞者彰","疾","宏大"],["彰","清楚"],["假輿馬者","假","憑藉"],
+    ["非利足也而致千里","利足","腳走得快"],["致","到達"],["非能水也而絕江河","水","游泳"],
+    ["絕","橫渡"],["君子生非異也善假於物也","生","本性"],["假","借助"],
+    ["積土成山風雨興焉","興","興起"],["不積跬步","跬步","半步"],["鍥而舍之朽木不折","鍥","雕刻"],
+    ["金石可鏤","鏤","雕刻"],["用心一也","一","專一"],["用心躁也","躁","浮躁"]
+];
+quanxue.forEach(item => allQuestions.push({ category:"大熱·勸學", sentence:item[0], boldWord:item[1], answer:item[2] }));
+
+// ================= 大熱 3. 始得西山宴遊記 =================
+const xishan = [
+    ["洋洋乎與造物者遊","洋洋","廣闊的樣子"],["引觴滿酌","引觴","取酒杯"],["頹然就醉","頹然","倒下的樣子"],
+    ["心凝形釋","凝","凝聚／靜定"],["與萬化冥合","冥合","暗暗相合"],["然後知吾嚮之未始遊","嚮","從前"],
+    ["故為之文以志","志","記述"],["是歲元和四年也","是","這"]
+];
+xishan.forEach(item => allQuestions.push({ category:"大熱·始得西山", sentence:item[0], boldWord:item[1], answer:item[2] }));
+
+// ================= 大熱 4. 登樓 (杜甫) + 三首詞 =================
+const denglou = [
+    ["西山寇盜莫相侵","莫","不要"],["日暮聊為梁甫吟","聊","姑且"]
+];
+denglou.forEach(item => allQuestions.push({ category:"大熱·登樓", sentence:item[0], boldWord:item[1], answer:item[2] }));
+
+// 詞 (念奴嬌、聲聲慢、青玉案)
+const ci = [
+    ["浪淘盡千古風流人物","風流","傑出英雄"],["早生華髮","華髮","花白頭髮"],["一尊還酹江月","酹","灑酒祭奠"],
+    ["尋尋覓覓冷冷清清","尋覓","到處尋找"],["最難將息","將息","調養休息"],["怎敵他晚來風急","怎敵","怎能抵擋"],
+    ["有誰堪摘","堪","能夠"],["這次第怎一個愁字了得","次第","光景情景"],["東風夜放花千樹","東風","春風"],
+    ["驀然回首","驀然","不經意地"],["玉壺光轉","玉壺","月亮"],["那人卻在燈火闌珊處","闌珊","稀疏零落"]
+];
+ci.forEach(item => allQuestions.push({ category:"大熱·詞", sentence:item[0], boldWord:item[1], answer:item[2] }));
+
+// ================= 中熱 1. 論仁論孝論君子 =================
+const lunyu = [
+    ["君子無終食之間違仁","終食","一頓飯時間"],["造次必於是","造次","倉促"],["克己復禮為仁","克","克制"],
+    ["天下歸仁焉","歸","稱許"],["無求生以害仁","害","損害"],["有殺身以成仁","成","成全"],
+    ["事父母幾諫","幾","委婉勸誡"],["又敬不違勞而不怨","勞","擔憂"],["君子坦蕩蕩","坦蕩蕩","心胸寬廣"],
+    ["內省不疚","省","反省"],["君子成人之美","成","成全"],["君子求諸己","求","要求"]
+];
+lunyu.forEach(item => allQuestions.push({ category:"中熱·論語", sentence:item[0], boldWord:item[1], answer:item[2] }));
+
+// ================= 中熱 2. 魚我所欲也 =================
+const yuwosuo = [
+    ["魚我所欲也","欲","想要"],["二者不可得兼","兼","同時擁有"],["捨生而取義者也","取","選取"],
+    ["故患有所不辟也","患","禍患"],["辟","躲避"],["如使人之所欲莫甚於生","如使","假如"],
+    ["非獨賢者有是心也","非獨","不只"],["可以闢患而有不為也","闢患","躲避禍患"],["蹴爾而與之","蹴爾","用腳踢的樣子"],
+    ["乞人不屑也","不屑","不願接受"],["萬鍾則不辯禮義而受之","辯","辨別"],["為宮室之美為之","美","華麗"]
+];
+yuwosuo.forEach(item => allQuestions.push({ category:"中熱·魚我所欲", sentence:item[0], boldWord:item[1], answer:item[2] }));
+
+// ================= 中熱 3. 逍遙遊 (節錄·你PDF已有) =================
+const xiaoyao = [
+    ["魏王貽我大瓠之種","貽","送給"],["樹之成而實五石","樹","種植"],["實","容受"],
+    ["剖之以為瓢","剖","切開"],["吾為其無用而掊之","掊","打破"],["世世以洴澼絖為事","洴澼絖","漂洗絲絮"],
+    ["鬻技百金","鬻","賣"],["說吳王","說","遊說"],["越有難","難","發難"],
+    ["吳王使之將","將","率領軍隊"],["何不慮以為大樽而浮乎江湖","慮","用繩結綴"],["夫子猶有蓬之心也夫","蓬之心","茅塞不通"]
+];
+xiaoyao.forEach(item => allQuestions.push({ category:"中熱·逍遙遊", sentence:item[0], boldWord:item[1], answer:item[2] }));
+
+// ================= 其他 (廉頗、師說等，上年出過，機會低，但仍完整收錄) =================
+const other = [
+    ["拜為上卿","拜","任命"],["徒見欺","徒","白白地"],["患秦兵之來","患","擔憂"],
+    ["而君幸於趙王","幸","寵幸"],["寧許以負秦曲","負","使…承擔"],["臣請完璧歸趙","完","完整歸還"],
+    ["璧有瑕","瑕","瑕疵"],["大王見臣列觀禮節甚倨","倨","傲慢"],["間至趙矣","間","小路"],
+    ["且相如素賤人","素賤人","出身卑賤"],["已而相如出","已而","不久"],["因賓客至藺相如門謝罪","因","通過"],
+    ["古之學者必有師","學者","求學的人"],["所以傳道受業解惑也","受","教授"],["吾從而師之","師","學習"],
+    ["其聞道也固先乎吾","固","本來"],["恥學於師","恥","感到羞恥"],["不拘於時","拘","拘泥"],
+    ["富與貴是人之所欲也","欲","盼望"],["不以其道得之","道","正當方法"],["貧與賤是人之所惡也","惡","厭惡"]
+];
+other.forEach(item => allQuestions.push({ category:"其他(上年出過)", sentence:item[0], boldWord:item[1], answer:item[2] }));
+
+// ---------- 建立分類清單 (大熱優先) ----------
+const categories = [
+    "大熱·出師表", "大熱·勸學", "大熱·始得西山", "大熱·登樓", "大熱·詞",
+    "中熱·論語", "中熱·魚我所欲", "中熱·逍遙遊",
+    "其他(上年出過)"
+];
+let currentCategory = "大熱·出師表";
+let currentQuestions = [];
+let currentIndex = 0;
+let correctCount = 0;
+let answeredStatus = [];
+
+// DOM 元素
+const categoryBar = document.getElementById("categoryBar");
+const sentenceDiv = document.getElementById("sentenceText");
+const answerInput = document.getElementById("answerInput");
+const feedbackDiv = document.getElementById("feedback");
+const checkBtn = document.getElementById("checkBtn");
+const skipBtn = document.getElementById("skipBtn");
+const nextBtn = document.getElementById("nextBtn");
+const correctCountSpan = document.getElementById("correctCount");
+const totalCountSpan = document.getElementById("totalCountSpan");
+const currentIdxSpan = document.getElementById("currentIdxSpan");
+const totalIdxSpan = document.getElementById("totalIdxSpan");
+
+function filterByCategory(cat) {
+    if (cat === "全部混合") return [...allQuestions];
+    return allQuestions.filter(q => q.category === cat);
+}
+
+function resetForCategory(cat) {
+    currentQuestions = filterByCategory(cat);
+    if (currentQuestions.length === 0) return;
+    currentIndex = 0;
+    answeredStatus = new Array(currentQuestions.length).fill(false);
+    correctCount = 0;
+    updateUI();
+    loadQuestion();
+}
+
+function updateUI() {
+    correctCountSpan.innerText = correctCount;
+    totalCountSpan.innerText = currentQuestions.length;
+    currentIdxSpan.innerText = currentIndex + 1;
+    totalIdxSpan.innerText = currentQuestions.length;
+}
+
+function renderBold(sentence, boldWord) {
+    const regex = new RegExp(`(${boldWord.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'g');
+    return sentence.replace(regex, `<span class="highlight">$1</span>`);
+}
+
+function loadQuestion() {
+    if (!currentQuestions.length) return;
+    const q = currentQuestions[currentIndex];
+    sentenceDiv.innerHTML = renderBold(q.sentence, q.boldWord);
+    answerInput.value = "";
+    feedbackDiv.innerHTML = "";
+    feedbackDiv.className = "feedback";
+    answerInput.disabled = false;
+    if (answeredStatus[currentIndex]) {
+        feedbackDiv.innerHTML = `✅ 已答對：${q.answer}`;
+        feedbackDiv.classList.add("correct-fb");
+        answerInput.disabled = true;
+    }
+    answerInput.setAttribute("data-correct", q.answer);
+    updateUI();
+}
+
+function checkAnswer() {
+    if (!currentQuestions.length) return;
+    const q = currentQuestions[currentIndex];
+    if (answeredStatus[currentIndex]) {
+        feedbackDiv.innerHTML = "此題已答對，進入下一題。";
+        feedbackDiv.classList.add("correct-fb");
+        return;
+    }
+    const userAns = answerInput.value.trim();
+    if (!userAns) {
+        feedbackDiv.innerHTML = "請輸入解釋";
+        feedbackDiv.classList.add("wrong-fb");
+        return;
+    }
+    const correct = q.answer;
+    const norm = s => s.toLowerCase().replace(/[，,。？!；;、]/g, '').replace(/\s/g, '');
+    if (norm(userAns) === norm(correct) || norm(correct).includes(norm(userAns)) && norm(userAns).length>1) {
+        answeredStatus[currentIndex] = true;
+        correctCount++;
+        feedbackDiv.innerHTML = `✔ 正確！「${q.boldWord}」：${correct}`;
+        feedbackDiv.classList.add("correct-fb");
+        answerInput.disabled = true;
+        updateUI();
+    } else {
+        feedbackDiv.innerHTML = `❌ 錯誤。你的答案：「${userAns}」 正解：「${correct}」`;
+        feedbackDiv.classList.add("wrong-fb");
+    }
+}
+
+function showAnswer() {
+    if (!currentQuestions.length) return;
+    const q = currentQuestions[currentIndex];
+    feedbackDiv.innerHTML = `🔍 參考答案：「${q.answer}」`;
+    feedbackDiv.classList.add("wrong-fb");
+}
+
+function nextQuestion() {
+    if (!currentQuestions.length) return;
+    if (currentIndex + 1 < currentQuestions.length) {
+        currentIndex++;
+        loadQuestion();
+    } else {
+        const percent = Math.round(correctCount / currentQuestions.length * 100);
+        feedbackDiv.innerHTML = `🏁 完成本分類！正確率 ${percent}%。可切換其他篇章。`;
+        feedbackDiv.classList.add("correct-fb");
+    }
+}
+
+// 建立分類按鈕 + 全部混合
+function buildCategoryButtons() {
+    const mixBtn = document.createElement("button");
+    mixBtn.innerText = "🔀 全部混合";
+    mixBtn.classList.add("cat-btn", "mix");
+    mixBtn.setAttribute("data-cat", "全部混合");
+    mixBtn.addEventListener("click", () => {
+        currentCategory = "全部混合";
+        resetForCategory("全部混合");
+        document.querySelectorAll(".cat-btn").forEach(btn => btn.classList.remove("active"));
+        mixBtn.classList.add("active");
+    });
+    categoryBar.appendChild(mixBtn);
+
+    categories.forEach(cat => {
+        const btn = document.createElement("button");
+        btn.innerText = cat;
+        btn.classList.add("cat-btn");
+        btn.setAttribute("data-cat", cat);
+        btn.addEventListener("click", () => {
+            currentCategory = cat;
+            resetForCategory(cat);
+            document.querySelectorAll(".cat-btn").forEach(b => b.classList.remove("active"));
+            btn.classList.add("active");
+        });
+        categoryBar.appendChild(btn);
+    });
+}
+
+buildCategoryButtons();
+// 預設載入大熱·出師表
+resetForCategory("大熱·出師表");
+document.querySelector(".cat-btn[data-cat='大熱·出師表']")?.classList.add("active");
+
+checkBtn.addEventListener("click", checkAnswer);
+skipBtn.addEventListener("click", showAnswer);
+nextBtn.addEventListener("click", nextQuestion);
+answerInput.addEventListener("keypress", (e) => { if (e.key === "Enter") checkAnswer(); });
+</script>
+</body>
+</html>
